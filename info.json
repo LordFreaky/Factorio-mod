@@ -1,13 +1,13 @@
 {
   "name": "heliopause-foundry",
   "version": "0.1.0",
-  "factorio_version": "2.1",
+  "factorio_version": "2.0.77",
   "title": "Heliopause Foundry",
   "author": "Freaky_Lord",
   "description": "Build the edge. Cross the void. / Errichte die Grenze. Durchquere die Leere. / Establece el límite. Atraviesa el vacío.",
   "homepage": "https://github.com/LordFreaky/Helipause-Foundry",
   "dependencies": [
-    "base >= 2.1",
+    "base >= 2.0.77",
     "? RecipeBook >= 4.0.2"
   ]
 }
