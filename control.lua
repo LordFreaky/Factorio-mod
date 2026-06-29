@@ -1,11 +1,4 @@
 local robots = 10
-local techs = {
-  "modular-armor",
-  "solar-panel-equipment",
-  "battery-equipment",
-  "construction-robotics",
-  "personal-roboport-equipment"
-}
 
 local function init()
   storage.equipped = storage.equipped or {}
@@ -33,11 +26,6 @@ local function give(player)
     storage.equipped[player.index] = true
     storage.pending[player.index] = nil
     return true
-  end
-
-  for _, name in pairs(techs) do
-    local tech = player.force.technologies[name]
-    if tech then tech.researched = true end
   end
 
   if not armor.set_stack({name = "modular-armor", count = 1}) then return false end
