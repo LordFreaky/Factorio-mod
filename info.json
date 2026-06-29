@@ -5,7 +5,7 @@
   "title": "Heliopause Foundry",
   "author": "Freaky_Lord",
   "description": "Build the edge. Cross the void. / Errichte die Grenze. Durchquere die Leere. / Establece el límite. Atraviesa el vacío.",
-  "homepage": "https://github.com/LordFreaky/Helipause-Foundry",
+  "homepage": "https://github.com/LordFreaky/Heliopause-Foundry",
   "dependencies": [
     "base >= 2.0.77",
     "? RecipeBook >= 4.0.2"
