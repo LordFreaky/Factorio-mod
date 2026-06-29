@@ -1,0 +1,14 @@
+{
+  "name": "Factorio-mod",
+  "version": "1.0.1",
+  "factorio_version": "2.1",
+  "title": "Factorio-mod",
+  "author": "Freaky_Lord",
+  "description": "X",
+  "homepage": "https://github.com/LordFreaky/Factorio-mod",
+  "dependencies": [
+    "base >= 2.0.1",
+    "? RecipeBook >= 4.0.2",
+	  "! space-age"
+  ]
+}
