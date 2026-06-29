@@ -3,24 +3,6 @@ local signal_prerequisite = "rocket-silo"
 data:extend({
   {
     type = "technology",
-    name = "heliopause-foundry-start-equipment",
-    icon = "__base__/graphics/technology/construction-robotics.png",
-    icon_size = 256,
-    enabled = false,
-    visible_when_disabled = true,
-    prerequisites = {"automation"},
-    effects = {},
-    unit = {
-      count = 25,
-      ingredients = {
-        {"automation-science-pack", 1}
-      },
-      time = 10
-    },
-    order = "a-b-a"
-  },
-  {
-    type = "technology",
     name = "heliopause-foundry-signal-from-space",
     icon = "__base__/graphics/technology/rocket-silo.png",
     icon_size = 256,
