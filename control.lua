@@ -1,38 +1,68 @@
+local STARTING_EQUIPMENT = {
+  robots = 10,
+  batteries = 3,
+  solar_panels = 15
+}
+
 local function give_starting_equipment(player)
   if not player or not player.valid or not player.character then
-    return
+    return false
   end
+
+  local character = player.character
 
   -- Give construction robots to the player's inventory.
-  player.insert{name = "construction-robot", count = 10}
+  character.insert{name = "construction-robot", count = STARTING_EQUIPMENT.robots}
+
+  -- Access the armor slot through the character.
+  local armor_inventory = character.get_inventory(defines.inventory.character_armor)
+  if not armor_inventory or not armor_inventory.valid then
+    player.print("Heliopause Foundry: Could not access armor inventory.")
+    return false
+  end
+
+  local armor_stack = armor_inventory[1]
 
   -- Equip modular armor.
-  local armor_inventory = player.get_inventory(defines.inventory.character_armor)
-  if not armor_inventory or not armor_inventory.valid then
-    return
+  if not armor_stack.set_stack{name = "modular-armor", count = 1} then
+    player.print("Heliopause Foundry: Could not equip modular armor.")
+    return false
   end
 
-  armor_inventory[1].set_stack{name = "modular-armor", count = 1}
-
-  local armor = armor_inventory[1]
-  if not armor.valid_for_read or not armor.grid then
-    return
+  -- Ensure the armor has an equipment grid.
+  local grid = armor_stack.grid or armor_stack.create_grid()
+  if not grid or not grid.valid then
+    player.print("Heliopause Foundry: Could not create armor equipment grid.")
+    return false
   end
 
-  local grid = armor.grid
+  -- Clear any existing equipment, just in case.
+  grid.clear()
 
-  -- Add equipment to the armor grid.
-  grid.put{name = "personal-roboport-equipment"}
-
-  for i = 1, 3 do
-    grid.put{name = "battery-equipment"}
+  -- Add personal roboport.
+  if not grid.put{name = "personal-roboport-equipment"} then
+    player.print("Heliopause Foundry: Could not insert personal roboport.")
+    return false
   end
 
-  for i = 1, 15 do
-    grid.put{name = "solar-panel-equipment"}
+  -- Add batteries.
+  for i = 1, STARTING_EQUIPMENT.batteries do
+    if not grid.put{name = "battery-equipment"} then
+      player.print("Heliopause Foundry: Could not insert battery " .. i .. ".")
+      return false
+    end
   end
 
-  player.print("Starting construction equipment installed.")
+  -- Add portable solar panels.
+  for i = 1, STARTING_EQUIPMENT.solar_panels do
+    if not grid.put{name = "solar-panel-equipment"} then
+      player.print("Heliopause Foundry: Could not insert solar panel " .. i .. ".")
+      return false
+    end
+  end
+
+  player.print("Heliopause Foundry: Starting construction equipment installed.")
+  return true
 end
 
 script.on_event(defines.events.on_player_created, function(event)
