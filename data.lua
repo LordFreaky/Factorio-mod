@@ -29,6 +29,8 @@ local foundry_planet = table.deepcopy(data.raw.planet["nauvis"])
 foundry_planet.name = foundry_base
 foundry_planet.localised_name = {"space-location-name.heliopause-foundry-base"}
 foundry_planet.localised_description = {"space-location-description.heliopause-foundry-base"}
+foundry_planet.icon = "__heliopause-foundry__/graphics/space-locations/foundry-base.png"
+foundry_planet.icon_size = 1024
 
 foundry_planet.distance = solar_system_edge.distance + 2
 foundry_planet.orientation = solar_system_edge.orientation + 0.015
@@ -53,19 +55,21 @@ data:extend({
   {
     type = "technology",
     name = foundry_discovery,
-    icon = "__base__/graphics/technology/rocket-silo.png",
-    icon_size = 256,
+    icon = "__heliopause-foundry__/graphics/space-locations/foundry-base.png",
+    icon_size = 1024,
 
     prerequisites = {
       "stellar-discovery-solar-system-edge"
     },
 
     effects = {
-      {
-        type = "unlock-space-location",
-        space_location = foundry_base
-      }
-    },
+  {
+    type = "unlock-space-location",
+    space_location = foundry_base,
+    icon = "__heliopause-foundry__/graphics/space-locations/foundry-base.png",
+    icon_size = 1024
+  }
+},
 
     unit = {
       count = 2000,
