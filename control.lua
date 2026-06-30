@@ -1,5 +1,7 @@
 local robots = 10
 local signal_tech = "heliopause-foundry-signal-from-space"
+local radar_tech = "radar"
+local radar_entity = "radar"
 
 local min_signal_delay = 5 * 60 * 60
 local max_signal_delay = 20 * 60 * 60
@@ -20,10 +22,8 @@ local function init()
   storage.equipped = storage.equipped or {}
   storage.pending = storage.pending or {}
   storage.hf_signal_researched_forces = storage.hf_signal_researched_forces or {}
-
-  if not storage.hf_signal_unlock_tick then
-    storage.hf_signal_unlock_tick = game.tick + random_signal_delay()
-  end
+  storage.hf_signal_unlock_ticks = storage.hf_signal_unlock_ticks or {}
+  storage.hf_signal_unlock_tick = nil
 end
 
 local function print_to_force(force, message)
@@ -32,6 +32,26 @@ local function print_to_force(force, message)
       player.print(message)
     end
   end
+end
+
+local function force_has_researched_technology(force, technology_name)
+  local tech = force.technologies[technology_name]
+
+  return tech and tech.researched
+end
+
+local function force_has_radar(force)
+  for _, surface in pairs(game.surfaces) do
+    if #surface.find_entities_filtered({name = radar_entity, force = force, limit = 1}) > 0 then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function signal_timer_conditions_met(force)
+  return force_has_researched_technology(force, radar_tech) and force_has_radar(force)
 end
 
 local function give_start_items(player)
@@ -106,19 +126,44 @@ local function unlock_signal_for_force(force)
   tech.researched = true
 
   storage.hf_signal_researched_forces[force.name] = true
+  storage.hf_signal_unlock_ticks[force.name] = nil
 
-  print_to_force(force, {"heliopause-foundry.signal-unlocked"})
+  print_to_force(force, {"heliopause-foundry.signal-researched"})
+end
+
+local function update_signal_timer_for_force(force)
+  local tech = force.technologies[signal_tech]
+
+  if not tech then return end
+
+  if tech.researched or storage.hf_signal_researched_forces[force.name] then
+    storage.hf_signal_unlock_ticks[force.name] = nil
+    return
+  end
+
+  if not signal_timer_conditions_met(force) then
+    storage.hf_signal_unlock_ticks[force.name] = nil
+    return
+  end
+
+  local unlock_tick = storage.hf_signal_unlock_ticks[force.name]
+
+  if not unlock_tick then
+    storage.hf_signal_unlock_ticks[force.name] = game.tick + random_signal_delay()
+    print_to_force(force, {"heliopause-foundry.signal-unlocked"})
+    return
+  end
+
+  if game.tick >= unlock_tick then
+    unlock_signal_for_force(force)
+  end
 end
 
 local function check_signal_unlock()
   init()
 
-  if game.tick < storage.hf_signal_unlock_tick then
-    return
-  end
-
   for _, force in pairs(game.forces) do
-    unlock_signal_for_force(force)
+    update_signal_timer_for_force(force)
   end
 end
 
