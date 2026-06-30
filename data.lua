@@ -49,14 +49,14 @@ data:extend({
     to = foundry_base,
     length = 2500,
     icon = "__base__/graphics/icons/radar.png",
-    icon_size = 64
+    icon_size = 1254
   },
 
   {
     type = "technology",
     name = foundry_discovery,
     icon = "__heliopause-foundry__/graphics/space-locations/foundry-base.png",
-    icon_size = 1024,
+    icon_size = 1254,
 
     prerequisites = {
       "stellar-discovery-solar-system-edge"
@@ -67,7 +67,7 @@ data:extend({
     type = "unlock-space-location",
     space_location = foundry_base,
     icon = "__heliopause-foundry__/graphics/space-locations/foundry-base.png",
-    icon_size = 1024
+    icon_size = 1254
   }
 },
 
