@@ -45,7 +45,7 @@ data:extend({
 })
 
 local solar_system_edge = data.raw["space-location"]["solar-system-edge"]
-local foundry_planet = table.deepcopy(data.raw.planet["nauvis"])
+local foundry_planet = table.deepcopy(data.raw.planet["vulcanus"])
 
 foundry_planet.name = foundry_base
 foundry_planet.localised_name = {"space-location-name.heliopause-foundry-base"}
@@ -93,20 +93,8 @@ data:extend({
   {
     type = "technology",
     name = foundry_discovery,
-
-    icons = {
-      {
-        icon = foundry_base_icon,
-        icon_size = foundry_base_icon_size
-      },
-      {
-        icon = "__space-age__/graphics/icons/planet-route.png",
-        icon_size = 64,
-        scale = 0.65,
-        shift = {-72, 72},
-        draw_background = true
-      }
-    },
+    icon = foundry_base_icon,
+    icon_size = foundry_base_icon_size,
 
     prerequisites = {
       "planet-discovery-aquilo"
