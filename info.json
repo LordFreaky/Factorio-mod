@@ -7,8 +7,11 @@
   "description": "Build the edge. Cross the void. / Errichte die Grenze. Durchquere die Leere. / Establece el límite. Atraviesa el vacío.",
   "homepage": "https://github.com/LordFreaky/Heliopause-Foundry",
   "dependencies": [
-    "base >= 2.1",
-    "space-age >= 2.1",
-    "? RecipeBook >= 4.0.2"
-  ]
+  "base >= 2.1",
+  "elevated-rails >= 2.1",
+  "quality >= 2.1",
+  "recycler >= 2.1",
+  "space-age >= 2.1",
+  "? RecipeBook >= 4.0.2"
+]
 }
