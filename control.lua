@@ -1,31 +1,39 @@
 local robots = 10
+
 local signal_tech = "heliopause-foundry-signal-from-space"
 local radar_tech = "radar"
 local radar_entity = "radar"
+
+local foundry_base_surface = "heliopause-foundry-base"
+local foundry_base_radius = 192
+local foundry_base_radius_squared = foundry_base_radius * foundry_base_radius
+local foundry_outside_tile = "out-of-map"
 
 local min_signal_delay = 5 * 60 * 60
 local max_signal_delay = 20 * 60 * 60
 local max_unpowered_radar_ticks = 30 * 60
 
+local function init()
+  storage.equipped = storage.equipped or {}
+  storage.pending = storage.pending or {}
+
+  storage.hf_signal_rng = storage.hf_signal_rng or game.create_random_generator()
+  storage.hf_signal_researched_forces = storage.hf_signal_researched_forces or {}
+  storage.hf_signal_unlock_ticks = storage.hf_signal_unlock_ticks or {}
+  storage.hf_signal_unpowered_since_ticks = storage.hf_signal_unpowered_since_ticks or {}
+end
+
 local function random_signal_delay()
-  local rng = game.create_random_generator()
+  init()
+
   local range = max_signal_delay - min_signal_delay + 1
-  local rolled = math.floor(rng() * range)
+  local rolled = math.floor(storage.hf_signal_rng() * range)
 
   if rolled >= range then
     rolled = range - 1
   end
 
   return min_signal_delay + rolled
-end
-
-local function init()
-  storage.equipped = storage.equipped or {}
-  storage.pending = storage.pending or {}
-  storage.hf_signal_researched_forces = storage.hf_signal_researched_forces or {}
-  storage.hf_signal_unlock_ticks = storage.hf_signal_unlock_ticks or {}
-  storage.hf_signal_unpowered_since_ticks = storage.hf_signal_unpowered_since_ticks or {} 
-  storage.hf_signal_unlock_tick = nil
 end
 
 local function print_to_force(force, message)
@@ -38,21 +46,19 @@ end
 
 local function force_has_researched_technology(force, technology_name)
   local tech = force.technologies[technology_name]
-
   return tech and tech.researched
 end
 
 local function radar_has_power(radar)
   local status = radar.status
-
   return status and status ~= defines.entity_status.no_power and status ~= defines.entity_status.low_power
 end
 
 local function get_force_radar_status(force)
   local has_radar = false
-  
+
   for _, surface in pairs(game.surfaces) do
-        for _, radar in pairs(surface.find_entities_filtered({name = radar_entity, force = force})) do
+    for _, radar in pairs(surface.find_entities_filtered({name = radar_entity, force = force})) do
       has_radar = true
 
       if radar_has_power(radar) then
@@ -87,10 +93,13 @@ local function give_start_items(player)
   local armor = armor_inventory[1]
 
   if not armor.valid_for_read then
-    if not armor.set_stack({name = "modular-armor", count = 1}) then return false end
+    if not armor.set_stack({name = "modular-armor", count = 1}) then
+      return false
+    end
   end
 
   local grid = armor.grid or armor.create_grid()
+
   if grid and grid.valid then
     grid.clear()
 
@@ -152,7 +161,7 @@ local function update_signal_timer_for_force(force)
   if not tech then return end
 
   if tech.researched or storage.hf_signal_researched_forces[force.name] then
-        reset_signal_timer_for_force(force)
+    reset_signal_timer_for_force(force)
     return
   end
 
@@ -211,10 +220,64 @@ local function check_signal_unlock()
   end
 end
 
+local function apply_foundry_circle_to_area(surface, area)
+  if not surface or not surface.valid then return end
+  if surface.name ~= foundry_base_surface then return end
+
+  local tiles = {}
+
+  local min_x = math.floor(area.left_top.x)
+  local max_x = math.ceil(area.right_bottom.x) - 1
+  local min_y = math.floor(area.left_top.y)
+  local max_y = math.ceil(area.right_bottom.y) - 1
+
+  for x = min_x, max_x do
+    for y = min_y, max_y do
+      local dx = x + 0.5
+      local dy = y + 0.5
+
+      if dx * dx + dy * dy > foundry_base_radius_squared then
+        tiles[#tiles + 1] = {
+          name = foundry_outside_tile,
+          position = {x = x, y = y}
+        }
+      end
+    end
+  end
+
+  if #tiles > 0 then
+    surface.set_tiles(tiles, true, true, true, false)
+  end
+end
+
+local function apply_foundry_circle_to_existing_chunks(surface)
+  if not surface or not surface.valid then return end
+  if surface.name ~= foundry_base_surface then return end
+
+  for chunk in surface.get_chunks() do
+    apply_foundry_circle_to_area(surface, {
+      left_top = {
+        x = chunk.x * 32,
+        y = chunk.y * 32
+      },
+      right_bottom = {
+        x = chunk.x * 32 + 32,
+        y = chunk.y * 32 + 32
+      }
+    })
+  end
+end
+
+local function apply_foundry_circle_to_foundry_surface()
+  local surface = game.surfaces[foundry_base_surface]
+  apply_foundry_circle_to_existing_chunks(surface)
+end
+
 local function setup()
   init()
   give_start_items_to_all()
   check_signal_unlock()
+  apply_foundry_circle_to_foundry_surface()
 end
 
 script.on_init(setup)
@@ -226,6 +289,22 @@ script.on_event({
   defines.events.on_player_respawned
 }, function(event)
   give_start_items(game.get_player(event.player_index))
+end)
+
+script.on_event(defines.events.on_surface_created, function(event)
+  local surface = game.surfaces[event.surface_index]
+  apply_foundry_circle_to_existing_chunks(surface)
+end)
+
+script.on_event(defines.events.on_player_changed_surface, function(event)
+  local player = game.get_player(event.player_index)
+  if not player or not player.valid then return end
+
+  apply_foundry_circle_to_existing_chunks(player.surface)
+end)
+
+script.on_event(defines.events.on_chunk_generated, function(event)
+  apply_foundry_circle_to_area(event.surface, event.area)
 end)
 
 script.on_nth_tick(60, function()
