@@ -7,7 +7,7 @@ local signal_icon = "__heliopause-foundry__/graphics/technology/space-signal.png
 local foundry_base_icon = "__heliopause-foundry__/graphics/space-locations/foundry-base.png"
 local foundry_base_icon_size = 1254
 
-local foundry_base_radius = 192
+local foundry_base_radius = 768
 local foundry_base_diameter = foundry_base_radius * 2
 
 local foundry_resource_replacements = {
@@ -91,7 +91,12 @@ local function replace_map_gen_resource(map_gen_settings, source_name, target_na
 
   local source_settings = entity_autoplace.settings[source_name]
 
-  entity_autoplace.settings[target_name] = table.deepcopy(source_settings or {})
+  entity_autoplace.settings[target_name] = table.deepcopy(source_settings or {
+    frequency = 1,
+    size = 1,
+    richness = 1
+  })
+
   entity_autoplace.settings[source_name] = {
     frequency = 0,
     size = 0,
