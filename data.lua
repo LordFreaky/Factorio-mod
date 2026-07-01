@@ -17,6 +17,13 @@ local foundry_resource_replacements = {
   ["sulfuric-acid-geyser"] = "heliopause-foundry-corrosive-vent"
 }
 
+local foundry_resource_graphics = {
+  ["heliopause-foundry-carbonized-regolith"] = "__heliopause-foundry__/graphics/resources/carbonized-regolith.png",
+  ["heliopause-foundry-slag-deposit"] = "__heliopause-foundry__/graphics/resources/slag-deposit.png",
+  ["heliopause-foundry-catalyst-crystal"] = "__heliopause-foundry__/graphics/resources/catalyst-crystal.png",
+  ["heliopause-foundry-corrosive-vent"] = "__heliopause-foundry__/graphics/resources/corrosive-vent.png"
+}
+
 local function add_prerequisite(technology_name, prerequisite_name)
   local technology = data.raw.technology[technology_name]
   if not technology then return end
@@ -44,6 +51,22 @@ local function create_foundry_resource(source_name, target_name)
   resource.name = target_name
   resource.localised_name = {"entity-name." .. target_name}
   resource.localised_description = {"entity-description." .. target_name}
+
+  local graphic = foundry_resource_graphics[target_name]
+
+  if graphic then
+    resource.stages = {
+      sheet = {
+        filename = graphic,
+        priority = "extra-high",
+        width = 512,
+        height = 512,
+        frame_count = 1,
+        variation_count = 1,
+        scale = 0.125
+      }
+    }
+  end
 
   return resource
 end
