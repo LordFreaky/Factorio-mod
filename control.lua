@@ -25,28 +25,28 @@ local fallback_resource_amounts = {
 
 local foundry_guaranteed_resource_patches = {
   {
-    name = "heliopause-foundry-carbonized-regolith",
-    center = {x = -64, y = -48},
-    radius = 14,
-    amount = 4000
-  },
-  {
     name = "heliopause-foundry-catalyst-crystal",
-    center = {x = 64, y = -48},
-    radius = 10,
-    amount = 2500
+    center = {x = 72, y = -56},
+    radius_x = 18,
+    radius_y = 10,
+    amount = 2500,
+    salt = 11
   },
   {
     name = "heliopause-foundry-slag-deposit",
-    center = {x = -64, y = 64},
-    radius = 10,
-    amount = 2500
+    center = {x = -72, y = 68},
+    radius_x = 20,
+    radius_y = 12,
+    amount = 2500,
+    salt = 23
   },
   {
     name = "heliopause-foundry-corrosive-vent",
-    center = {x = 64, y = 64},
-    radius = 3,
-    amount = 100000
+    center = {x = 58, y = 72},
+    radius_x = 7,
+    radius_y = 5,
+    amount = 100000,
+    salt = 37
   }
 }
 
@@ -358,14 +358,19 @@ local function replace_foundry_resources_in_area(surface, area)
 end
 
 local function is_inside_foundry_circle(position)
-  local dx = position.x or position[1] or 0
-  local dy = position.y or position[2] or 0
+  local x = position.x or position[1] or 0
+  local y = position.y or position[2] or 0
 
-  return dx * dx + dy * dy <= foundry_base_radius_squared
+  return x * x + y * y <= foundry_base_radius_squared
+end
+
+local function patch_noise(x, y, salt)
+  local value = (x * 73856093 + y * 19349663 + salt * 83492791) % 100000
+  return value / 100000
 end
 
 local function resource_patch_exists(surface, patch)
-  local radius = patch.radius + 4
+  local radius = math.max(patch.radius_x, patch.radius_y) + 8
   local center = patch.center
 
   local resources = surface.find_entities_filtered({
@@ -392,21 +397,30 @@ local function create_foundry_resource_patch(surface, patch)
   if resource_patch_exists(surface, patch) then return end
 
   local center = patch.center
-  local radius_squared = patch.radius * patch.radius
 
-  for x = center.x - patch.radius, center.x + patch.radius do
-    for y = center.y - patch.radius, center.y + patch.radius do
+  for x = center.x - patch.radius_x, center.x + patch.radius_x do
+    for y = center.y - patch.radius_y, center.y + patch.radius_y do
       local dx = x - center.x
       local dy = y - center.y
       local position = {x = x, y = y}
 
-      if dx * dx + dy * dy <= radius_squared and is_inside_foundry_circle(position) then
+      local shape =
+        (dx * dx) / (patch.radius_x * patch.radius_x) +
+        (dy * dy) / (patch.radius_y * patch.radius_y)
+
+      local edge_variation = (patch_noise(x, y, patch.salt) - 0.5) * 0.65
+      local holes = patch_noise(x, y, patch.salt + 101)
+
+      if shape <= 1 + edge_variation and holes > 0.12 and is_inside_foundry_circle(position) then
+        local richness_noise = 0.75 + patch_noise(x, y, patch.salt + 202) * 0.5
+        local amount = math.floor(patch.amount * richness_noise)
+
         create_resource_entity(
           surface,
           patch.name,
           position,
-          patch.amount,
-          patch.amount
+          amount,
+          amount
         )
       end
     end
@@ -479,6 +493,7 @@ end
 
 local function process_foundry_surface()
   local surface = game.surfaces[foundry_base_surface]
+
   process_foundry_existing_chunks(surface)
   create_foundry_guaranteed_resource_patches(surface)
 end
@@ -503,6 +518,7 @@ end)
 
 script.on_event(defines.events.on_surface_created, function(event)
   local surface = game.surfaces[event.surface_index]
+
   process_foundry_existing_chunks(surface)
   create_foundry_guaranteed_resource_patches(surface)
 end)
