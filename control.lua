@@ -9,6 +9,13 @@ local foundry_base_radius = 192
 local foundry_base_radius_squared = foundry_base_radius * foundry_base_radius
 local foundry_outside_tile = "out-of-map"
 
+local foundry_resource_replacements = {
+  ["coal"] = "heliopause-foundry-carbonized-regolith",
+  ["tungsten-ore"] = "heliopause-foundry-slag-deposit",
+  ["calcite"] = "heliopause-foundry-catalyst-crystal",
+  ["sulfuric-acid-geyser"] = "heliopause-foundry-corrosive-vent"
+}
+
 local min_signal_delay = 5 * 60 * 60
 local max_signal_delay = 20 * 60 * 60
 local max_unpowered_radar_ticks = 30 * 60
@@ -220,6 +227,46 @@ local function check_signal_unlock()
   end
 end
 
+local function get_resource_amount(resource)
+  local ok, amount = pcall(function()
+    return resource.amount
+  end)
+
+  if ok and amount and amount > 0 then
+    return amount
+  end
+
+  return 1
+end
+
+local function replace_foundry_resources_in_area(surface, area)
+  if not surface or not surface.valid then return end
+  if surface.name ~= foundry_base_surface then return end
+
+  for source_name, target_name in pairs(foundry_resource_replacements) do
+    local resources = surface.find_entities_filtered({
+      area = area,
+      type = "resource",
+      name = source_name
+    })
+
+    for _, resource in pairs(resources) do
+      if resource.valid then
+        local position = resource.position
+        local amount = get_resource_amount(resource)
+
+        resource.destroy({raise_destroy = false})
+
+        surface.create_entity({
+          name = target_name,
+          position = position,
+          amount = amount
+        })
+      end
+    end
+  end
+end
+
 local function apply_foundry_circle_to_area(surface, area)
   if not surface or not surface.valid then return end
   if surface.name ~= foundry_base_surface then return end
@@ -250,12 +297,17 @@ local function apply_foundry_circle_to_area(surface, area)
   end
 end
 
-local function apply_foundry_circle_to_existing_chunks(surface)
+local function process_foundry_area(surface, area)
+  apply_foundry_circle_to_area(surface, area)
+  replace_foundry_resources_in_area(surface, area)
+end
+
+local function process_foundry_existing_chunks(surface)
   if not surface or not surface.valid then return end
   if surface.name ~= foundry_base_surface then return end
 
   for chunk in surface.get_chunks() do
-    apply_foundry_circle_to_area(surface, {
+    process_foundry_area(surface, {
       left_top = {
         x = chunk.x * 32,
         y = chunk.y * 32
@@ -268,16 +320,16 @@ local function apply_foundry_circle_to_existing_chunks(surface)
   end
 end
 
-local function apply_foundry_circle_to_foundry_surface()
+local function process_foundry_surface()
   local surface = game.surfaces[foundry_base_surface]
-  apply_foundry_circle_to_existing_chunks(surface)
+  process_foundry_existing_chunks(surface)
 end
 
 local function setup()
   init()
   give_start_items_to_all()
   check_signal_unlock()
-  apply_foundry_circle_to_foundry_surface()
+  process_foundry_surface()
 end
 
 script.on_init(setup)
@@ -293,18 +345,18 @@ end)
 
 script.on_event(defines.events.on_surface_created, function(event)
   local surface = game.surfaces[event.surface_index]
-  apply_foundry_circle_to_existing_chunks(surface)
+  process_foundry_existing_chunks(surface)
 end)
 
 script.on_event(defines.events.on_player_changed_surface, function(event)
   local player = game.get_player(event.player_index)
   if not player or not player.valid then return end
 
-  apply_foundry_circle_to_existing_chunks(player.surface)
+  process_foundry_existing_chunks(player.surface)
 end)
 
 script.on_event(defines.events.on_chunk_generated, function(event)
-  apply_foundry_circle_to_area(event.surface, event.area)
+  process_foundry_area(event.surface, event.area)
 end)
 
 script.on_nth_tick(60, function()
