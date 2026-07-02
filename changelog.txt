@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.3
-Date: 2026-07-01
+Date: 2026-07-02
   Features:
     - Added custom Heliopause Foundry resource variants for the Foundry Base surface.
     - Added carbonized regolith as a Foundry-themed replacement for coal.
@@ -8,15 +8,22 @@ Date: 2026-07-01
     - Added thermal catalyst crystals as a Foundry-themed replacement for calcite.
     - Added corrosive coolant vents as a Foundry-themed replacement for sulfuric acid geysers.
     - Added custom resource graphics for the new Foundry resource variants.
+    - Added new collectible Foundry resource items for carbonized regolith, foundry slag deposits, and thermal catalyst crystals.
+    - Added corrosive coolant as a new Foundry fluid.
+    - Added processing recipes that convert the new Foundry resources back into their Space Age base resources.
+    - Added separate inventory item icons and fluid icons for the new Foundry resources.
   Changes:
     - Limited the new resource replacements to the Heliopause Foundry Base surface.
     - Kept Vulcanus resources unchanged on Vulcanus itself.
+    - Changed Foundry resource mining so the new deposits produce custom Foundry items or fluids instead of directly producing the original resources.
+    - Kept resource graphics separate from item and fluid icons.
     - Added guaranteed irregular resource patches for catalyst crystals, slag deposits, and corrosive coolant vents.
     - Removed the guaranteed extra carbonized regolith patch to avoid duplicate coal-like resources.
     - Improved Foundry resource patch shapes so they look less artificial.
     - Added map colors for the new Foundry resource variants.
   Bugfixes:
     - Fixed resource graphics loading by matching stage_counts to the custom resource animation stage count.
+    - Fixed item and fluid icon paths for the new graphics/icons/item and graphics/icons/fluid folders.
     - Improved resource replacement handling so original resources are not permanently deleted if replacement creation fails.
     - Added fallback resource amounts for finite and infinite resource replacement.
 ---------------------------------------------------------------------------------------------------
